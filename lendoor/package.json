@@ -17,5 +17,6 @@
   "devDependencies": {
     "matchstick-as": "0.6.0",
     "undici": "^7.16.0"
-  }
+  },
+  "packageManager": "yarn@4.12.0"
 }

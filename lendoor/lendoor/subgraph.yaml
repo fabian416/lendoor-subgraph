@@ -8,7 +8,7 @@ dataSources:
     name: BeaconProxy
     network: celo
     source:
-      address: "0x31BF6609DC9AefcaFB5D6e5FA4773E0b1bF61a01"
+      address: "0x31bf6609dc9aefcafb5d6e5fa4773e0b1bf61a01"
       abi: BeaconProxy
       startBlock: 51859355
     mapping:
