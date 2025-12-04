@@ -1,0 +1,8 @@
+{
+  "celo": {
+    "BeaconProxy": {
+      "address": "0x31BF6609DC9AefcaFB5D6e5FA4773E0b1bF61a01",
+      "startBlock": 51859355
+    }
+  }
+}
