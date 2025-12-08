@@ -1,7 +1,40 @@
-type Genesis @entity(immutable: true) {
-  id: Bytes!
+"""
+Actividad del vault: depósitos, retiros, borrows, repays.
+"""
+type VaultActivity @entity(immutable: true) {
+  id: ID!
+
+  type: String!
+  account: Bytes!
+  counterparty: Bytes
+
+  assets: BigInt!
+  shares: BigInt
+
+  txHash: Bytes!
+  logIndex: BigInt!
 
   blockNumber: BigInt!
   blockTimestamp: BigInt!
-  transactionHash: Bytes!
+}
+
+"""
+Snapshots del estado del vault (para APY, gráficas, etc.)
+"""
+type VaultStatusSnapshot @entity(immutable: true) {
+  id: ID!
+
+  totalShares: BigInt!
+  totalBorrows: BigInt!
+  accumulatedFees: BigInt!
+  cash: BigInt!
+  interestAccumulator: BigInt!
+  interestRate: BigInt!
+
+  vaultTimestamp: BigInt!
+
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  txHash: Bytes!
+  logIndex: BigInt!
 }

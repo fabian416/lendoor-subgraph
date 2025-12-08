@@ -1,8 +1,10 @@
 specVersion: 1.3.0
 indexerHints:
   prune: auto
+
 schema:
   file: ./schema.graphql
+
 dataSources:
   - kind: ethereum
     name: BeaconProxy
@@ -11,16 +13,30 @@ dataSources:
       address: "0x31BF6609DC9AefcaFB5D6e5FA4773E0b1bF61a01"
       abi: BeaconProxy
       startBlock: 51859355
+
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
       language: wasm/assemblyscript
+
       entities:
-        - Genesis
+        - VaultActivity
+        - VaultStatusSnapshot
+
       abis:
         - name: BeaconProxy
           file: ./abis/BeaconProxy.json
+
       eventHandlers:
-        - event: Genesis()
-          handler: handleGenesis
+        - event: Deposit(indexed address,indexed address,uint256,uint256)
+          handler: handleDeposit
+        - event: Withdraw(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleWithdraw
+        - event: Borrow(indexed address,uint256)
+          handler: handleBorrow
+        - event: Repay(indexed address,uint256)
+          handler: handleRepay
+        - event: VaultStatus(uint256,uint256,uint256,uint256,uint256,uint256,uint256)
+          handler: handleVaultStatus
+
       file: ./src/beacon-proxy.ts
