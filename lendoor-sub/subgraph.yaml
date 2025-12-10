@@ -25,9 +25,6 @@ dataSources:
       entities:
         - VaultActivity
         - VaultStatusSnapshot
-        - ProtocolStat
-        - Borrower
-        - DailyProtocolStat
 
       abis:
         - name: BeaconProxy
@@ -48,10 +45,7 @@ dataSources:
       file: ./src/beacon-proxy.ts
 
   # ----------------------------------------
-  # 2) LOAN MANAGER (PROXY)
-  # Métricas reales del préstamo:
-  # principalOriginated / principalRepaid / interestRepaid
-  # + stats globales y diarias
+  # 2) LOAN MANAGER
   # ----------------------------------------
   - kind: ethereum
     name: LoanManager
@@ -70,6 +64,8 @@ dataSources:
         - ProtocolStat
         - Borrower
         - DailyProtocolStat
+        - ActiveLoan
+        - LoanActivity
 
       abis:
         - name: LoanManager
@@ -81,5 +77,9 @@ dataSources:
 
         - event: LoanClosed(indexed address,uint256)
           handler: handleLoanClosed
+
+        # Solo si implementaste el handler en loan-manager.ts
+        - event: LoanDefaulted(indexed address,uint256)
+          handler: handleLoanDefaulted
 
       file: ./src/loan-manager.ts

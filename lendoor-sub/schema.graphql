@@ -1,10 +1,11 @@
 """
 Actividad del vault: depósitos, retiros, borrows, repays.
+Event-based feed => immutable.
 """
 type VaultActivity @entity(immutable: true) {
   id: ID!
 
-  type: String!
+  type: String! # DEPOSIT | WITHDRAW | BORROW | REPAY
   account: Bytes!
   counterparty: Bytes
 
@@ -20,6 +21,7 @@ type VaultActivity @entity(immutable: true) {
 
 """
 Snapshots del estado del vault (para APY, gráficas, etc.)
+Event-based => immutable.
 """
 type VaultStatusSnapshot @entity(immutable: true) {
   id: ID!
@@ -40,25 +42,26 @@ type VaultStatusSnapshot @entity(immutable: true) {
 }
 
 """
-Identidad simple del borrower para contar únicos
+Identidad simple del borrower para contar únicos.
+Se crea una vez => immutable.
 """
 type Borrower @entity(immutable: true) {
-  id: ID! # address
+  id: ID! # address hex string
   firstSeen: BigInt!
 }
 
 """
 Estado auxiliar del loan actual por borrower
-(para poder calcular interest en LoanClosed)
+para poder calcular interest en LoanClosed.
+
+Se actualiza => mutable.
 """
 type ActiveLoan @entity(immutable: false) {
-  id: ID! # borrower address
-  borrower: Bytes!
-
+  id: ID! # borrower address hex string
   principal: BigInt!
   amountDue: BigInt!
 
-  feeBps: BigInt
+  feeBps: Int
   start: BigInt
   due: BigInt
 
@@ -66,14 +69,14 @@ type ActiveLoan @entity(immutable: false) {
 }
 
 """
-Stats globales del protocolo
+Stats globales del protocolo.
+Se actualiza en cada evento => mutable.
 """
 type ProtocolStat @entity(immutable: false) {
   id: ID! # "global"
   loansOriginated: BigInt!
   uniqueBorrowers: BigInt!
 
-  # ✅ nuevos para interés real
   principalOriginated: BigInt!
   principalRepaid: BigInt!
   interestRepaid: BigInt!
@@ -82,7 +85,8 @@ type ProtocolStat @entity(immutable: false) {
 }
 
 """
-Stats diarios (para gráficos)
+Stats diarios (para gráficos).
+Se actualiza durante el día => mutable.
 """
 type DailyProtocolStat @entity(immutable: false) {
   id: ID! # dayStart timestamp string
@@ -91,7 +95,6 @@ type DailyProtocolStat @entity(immutable: false) {
   loansOriginated: BigInt!
   uniqueBorrowers: BigInt!
 
-  # ✅ nuevos para interés real
   principalOriginated: BigInt!
   principalRepaid: BigInt!
   interestRepaid: BigInt!
@@ -100,7 +103,10 @@ type DailyProtocolStat @entity(immutable: false) {
 }
 
 """
-Opcional: feed 'financiero' real del LoanManager
+Feed financiero real del LoanManager.
+Event-based => immutable.
+
+Opcional pero recomendado para UI de activity con interés.
 """
 type LoanActivity @entity(immutable: true) {
   id: ID!
@@ -114,6 +120,8 @@ type LoanActivity @entity(immutable: true) {
   interest: BigInt
 
   txHash: Bytes!
+  logIndex: BigInt
+
   blockNumber: BigInt!
   blockTimestamp: BigInt!
 }
