@@ -38,3 +38,15 @@ type VaultStatusSnapshot @entity(immutable: true) {
   txHash: Bytes!
   logIndex: BigInt!
 }
+
+type ProtocolStat @entity(immutable: false) {
+  id: ID!
+  loansOriginated: BigInt!
+  uniqueBorrowers: BigInt!
+  lastUpdated: BigInt!
+}
+
+type Borrower @entity(immutable: true) {
+  id: ID! # address
+  firstSeen: BigInt!
+}
