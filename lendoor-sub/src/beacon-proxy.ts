@@ -13,9 +13,7 @@ import {
   VaultStatusSnapshot,
   ProtocolStat,
   Borrower,
-  DailyProtocolStat,
-  PrincipalOriginated,
-  PrincipalRepaid
+  DailyProtocolStat
 } from "../generated/schema"
 
 function buildIdFromEvent(prefix: string, txHash: Bytes, logIndex: BigInt): string {
@@ -41,15 +39,8 @@ function getDailyStat(ts: BigInt): DailyProtocolStat {
   if (daily == null) {
     daily = new DailyProtocolStat(id)
     daily.dayStart = dayStartTimestamp(ts)
-
     daily.loansOriginated = BigInt.fromI32(0)
     daily.uniqueBorrowers = BigInt.fromI32(0)
-
-    // ✅ nuevos campos (si los agregaste al schema)
-    daily.principalOriginated = BigInt.fromI32(0)
-    daily.principalRepaid = BigInt.fromI32(0)
-    daily.interestRepaid = BigInt.fromI32(0)
-
     daily.lastUpdated = ts
   }
 
@@ -58,19 +49,14 @@ function getDailyStat(ts: BigInt): DailyProtocolStat {
 
 function getProtocolStat(): ProtocolStat {
   let stat = ProtocolStat.load("global")
+
   if (stat == null) {
     stat = new ProtocolStat("global")
-
     stat.loansOriginated = BigInt.fromI32(0)
     stat.uniqueBorrowers = BigInt.fromI32(0)
-
-    // ✅ nuevos campos (si los agregaste al schema)
-    stat.principalOriginated = BigInt.fromI32(0)
-    stat.principalRepaid = BigInt.fromI32(0)
-    stat.interestRepaid = BigInt.fromI32(0)
-
     stat.lastUpdated = BigInt.fromI32(0)
   }
+
   return stat as ProtocolStat
 }
 

@@ -6,6 +6,9 @@ schema:
   file: ./schema.graphql
 
 dataSources:
+  # ----------------------------------------
+  # 1) EVAULT / BEACON PROXY
+  # ----------------------------------------
   - kind: ethereum
     name: BeaconProxy
     network: celo
@@ -22,6 +25,9 @@ dataSources:
       entities:
         - VaultActivity
         - VaultStatusSnapshot
+        - ProtocolStat
+        - Borrower
+        - DailyProtocolStat
 
       abis:
         - name: BeaconProxy
@@ -43,9 +49,9 @@ dataSources:
 
   # ----------------------------------------
   # 2) LOAN MANAGER (PROXY)
-  # Para métricas reales del préstamo:
-  # loansOriginated, uniqueBorrowers,
-  # interestRepaid, daily snapshots, etc.
+  # Métricas reales del préstamo:
+  # principalOriginated / principalRepaid / interestRepaid
+  # + stats globales y diarias
   # ----------------------------------------
   - kind: ethereum
     name: LoanManager
@@ -61,7 +67,6 @@ dataSources:
       language: wasm/assemblyscript
 
       entities:
-        - LoanActivity
         - ProtocolStat
         - Borrower
         - DailyProtocolStat
@@ -71,15 +76,10 @@ dataSources:
           file: ./abis/LoanManager.json
 
       eventHandlers:
-        # 👇 Reemplazá por los eventos reales de tu contrato
-        # Ejemplos típicos:
+        - event: LoanOpened(indexed address,uint256,uint256,uint64,uint16,uint32)
+          handler: handleLoanOpened
 
-        # Cuando se origina un préstamo real (con principal)
-        - event: LoanIssued(indexed address,uint256,uint256)
-          handler: handleLoanIssued
-
-        # Cuando se repaga (ideal si el evento incluye interest/principal)
-        - event: LoanRepaid(indexed address,uint256,uint256)
-          handler: handleLoanRepaid
+        - event: LoanClosed(indexed address,uint256)
+          handler: handleLoanClosed
 
       file: ./src/loan-manager.ts
