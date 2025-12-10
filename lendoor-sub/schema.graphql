@@ -39,14 +39,81 @@ type VaultStatusSnapshot @entity(immutable: true) {
   logIndex: BigInt!
 }
 
-type ProtocolStat @entity(immutable: false) {
-  id: ID!
-  loansOriginated: BigInt!
-  uniqueBorrowers: BigInt!
-  lastUpdated: BigInt!
-}
-
+"""
+Identidad simple del borrower para contar únicos
+"""
 type Borrower @entity(immutable: true) {
   id: ID! # address
   firstSeen: BigInt!
+}
+
+"""
+Estado auxiliar del loan actual por borrower
+(para poder calcular interest en LoanClosed)
+"""
+type ActiveLoan @entity(immutable: false) {
+  id: ID! # borrower address
+  borrower: Bytes!
+
+  principal: BigInt!
+  amountDue: BigInt!
+
+  feeBps: BigInt
+  start: BigInt
+  due: BigInt
+
+  active: Boolean!
+}
+
+"""
+Stats globales del protocolo
+"""
+type ProtocolStat @entity(immutable: false) {
+  id: ID! # "global"
+  loansOriginated: BigInt!
+  uniqueBorrowers: BigInt!
+
+  # ✅ nuevos para interés real
+  principalOriginated: BigInt!
+  principalRepaid: BigInt!
+  interestRepaid: BigInt!
+
+  lastUpdated: BigInt!
+}
+
+"""
+Stats diarios (para gráficos)
+"""
+type DailyProtocolStat @entity(immutable: false) {
+  id: ID! # dayStart timestamp string
+  dayStart: BigInt!
+
+  loansOriginated: BigInt!
+  uniqueBorrowers: BigInt!
+
+  # ✅ nuevos para interés real
+  principalOriginated: BigInt!
+  principalRepaid: BigInt!
+  interestRepaid: BigInt!
+
+  lastUpdated: BigInt!
+}
+
+"""
+Opcional: feed 'financiero' real del LoanManager
+"""
+type LoanActivity @entity(immutable: true) {
+  id: ID!
+
+  type: String! # OPEN | CLOSE | DEFAULT
+  borrower: Bytes!
+
+  principal: BigInt
+  amountDue: BigInt
+  paid: BigInt
+  interest: BigInt
+
+  txHash: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
 }

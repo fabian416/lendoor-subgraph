@@ -13,6 +13,9 @@ import {
   VaultStatusSnapshot,
   ProtocolStat,
   Borrower,
+  DailyProtocolStat,
+  PrincipalOriginated,
+  PrincipalRepaid
 } from "../generated/schema"
 
 function buildIdFromEvent(prefix: string, txHash: Bytes, logIndex: BigInt): string {
@@ -21,12 +24,51 @@ function buildIdFromEvent(prefix: string, txHash: Bytes, logIndex: BigInt): stri
 
 // ---------------- ACTIVITY FEED ----------------
 
+const SECONDS_PER_DAY = 86400
+
+function dayStartTimestamp(ts: BigInt): BigInt {
+  return ts.div(BigInt.fromI32(SECONDS_PER_DAY)).times(BigInt.fromI32(SECONDS_PER_DAY))
+}
+
+function dayId(ts: BigInt): string {
+  return dayStartTimestamp(ts).toString()
+}
+
+function getDailyStat(ts: BigInt): DailyProtocolStat {
+  const id = dayId(ts)
+  let daily = DailyProtocolStat.load(id)
+
+  if (daily == null) {
+    daily = new DailyProtocolStat(id)
+    daily.dayStart = dayStartTimestamp(ts)
+
+    daily.loansOriginated = BigInt.fromI32(0)
+    daily.uniqueBorrowers = BigInt.fromI32(0)
+
+    // ✅ nuevos campos (si los agregaste al schema)
+    daily.principalOriginated = BigInt.fromI32(0)
+    daily.principalRepaid = BigInt.fromI32(0)
+    daily.interestRepaid = BigInt.fromI32(0)
+
+    daily.lastUpdated = ts
+  }
+
+  return daily as DailyProtocolStat
+}
+
 function getProtocolStat(): ProtocolStat {
   let stat = ProtocolStat.load("global")
   if (stat == null) {
     stat = new ProtocolStat("global")
+
     stat.loansOriginated = BigInt.fromI32(0)
     stat.uniqueBorrowers = BigInt.fromI32(0)
+
+    // ✅ nuevos campos (si los agregaste al schema)
+    stat.principalOriginated = BigInt.fromI32(0)
+    stat.principalRepaid = BigInt.fromI32(0)
+    stat.interestRepaid = BigInt.fromI32(0)
+
     stat.lastUpdated = BigInt.fromI32(0)
   }
   return stat as ProtocolStat
@@ -80,14 +122,14 @@ export function handleRepay(event: RepayEvent): void {
 
   entity.save()
 }
+
 export function handleBorrow(event: BorrowEvent): void {
-  // ---- activity entity (lo que ya tenías) ----
+  // ---- activity entity ----
   let id = buildIdFromEvent("borrow", event.transaction.hash, event.logIndex)
   let entity = new VaultActivity(id)
 
   entity.type = "BORROW"
   entity.account = event.params.account
-
   entity.assets = event.params.assets
   entity.unset("shares")
   entity.unset("counterparty")
@@ -99,13 +141,15 @@ export function handleBorrow(event: BorrowEvent): void {
 
   entity.save()
 
-  // ---- ✅ protocol stats ----
+  // ---- global stats ----
   let stat = getProtocolStat()
-
-  // 1) loans originated = count BORROW events
   stat.loansOriginated = stat.loansOriginated.plus(BigInt.fromI32(1))
 
-  // 2) unique borrowers
+  // ---- daily stats ----
+  let daily = getDailyStat(event.block.timestamp)
+  daily.loansOriginated = daily.loansOriginated.plus(BigInt.fromI32(1))
+
+  // ---- unique borrowers global + daily new borrowers ----
   let borrowerId = event.params.account.toHexString()
   let borrower = Borrower.load(borrowerId)
 
@@ -115,10 +159,14 @@ export function handleBorrow(event: BorrowEvent): void {
     borrower.save()
 
     stat.uniqueBorrowers = stat.uniqueBorrowers.plus(BigInt.fromI32(1))
+    daily.uniqueBorrowers = daily.uniqueBorrowers.plus(BigInt.fromI32(1))
   }
 
   stat.lastUpdated = event.block.timestamp
+  daily.lastUpdated = event.block.timestamp
+
   stat.save()
+  daily.save()
 }
 
 // ---------------- STATUS SNAPSHOTS ----------------

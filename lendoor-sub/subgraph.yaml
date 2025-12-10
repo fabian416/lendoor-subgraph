@@ -40,3 +40,46 @@ dataSources:
           handler: handleVaultStatus
 
       file: ./src/beacon-proxy.ts
+
+  # ----------------------------------------
+  # 2) LOAN MANAGER (PROXY)
+  # Para métricas reales del préstamo:
+  # loansOriginated, uniqueBorrowers,
+  # interestRepaid, daily snapshots, etc.
+  # ----------------------------------------
+  - kind: ethereum
+    name: LoanManager
+    network: celo
+    source:
+      address: "0x3E1536CC066C626Ee96D79bb00d1c9dC7d4D86b6"
+      abi: LoanManager
+      startBlock: 51936733
+
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+
+      entities:
+        - LoanActivity
+        - ProtocolStat
+        - Borrower
+        - DailyProtocolStat
+
+      abis:
+        - name: LoanManager
+          file: ./abis/LoanManager.json
+
+      eventHandlers:
+        # 👇 Reemplazá por los eventos reales de tu contrato
+        # Ejemplos típicos:
+
+        # Cuando se origina un préstamo real (con principal)
+        - event: LoanIssued(indexed address,uint256,uint256)
+          handler: handleLoanIssued
+
+        # Cuando se repaga (ideal si el evento incluye interest/principal)
+        - event: LoanRepaid(indexed address,uint256,uint256)
+          handler: handleLoanRepaid
+
+      file: ./src/loan-manager.ts
